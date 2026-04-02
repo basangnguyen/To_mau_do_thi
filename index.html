@@ -41,7 +41,6 @@
         .panel { position: relative; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h2 { font-size: 1.1em; border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 15px; color: var(--primary); }
         
-        /* Nút phóng to chuyên dụng */
         .zoom-btn {
             position: absolute; top: 15px; right: 15px; width: 35px; height: 35px;
             background: var(--bg); border: 1px solid #ccc; border-radius: 6px;
@@ -55,22 +54,26 @@
         
         #mynetwork { height: 450px; background: var(--card); border-radius: 8px; border: 1px dashed #ccc; }
         
-        /* Chỉnh lại phần ma trận để phóng to đẹp hơn */
-        .matrix-container { overflow: auto; background: var(--card); padding: 40px 20px 20px 20px; min-height: 200px; display: flex; flex-direction: column; align-items: center; }
-        table { border-collapse: collapse; margin: auto; background: white; }
-        td { border: 1px solid #333; width: 40px; height: 40px; text-align: center; font-weight: bold; color: black; }
+        /* Cấu trúc Ma trận kề */
+        .matrix-container { overflow: auto; background: var(--card); padding: 40px 20px 20px 20px; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #matrix-table-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; }
+        table { border-collapse: collapse; background: white; border: 2px solid #333; }
+        td { border: 1px solid #333; width: 35px; height: 35px; text-align: center; font-weight: bold; color: #000; transition: 0.2s; }
+        td:hover { background: #f0f0f0; }
         
-        /* Fullscreen mode fixes */
-        :fullscreen .panel { width: 100%; height: 100%; padding: 50px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; }
-        :fullscreen h2 { display: none; }
-        :fullscreen #mynetwork { height: 90vh; }
+        /* Tối ưu hóa khi PHÓNG TO TOÀN MÀN HÌNH */
+        :fullscreen { background-color: var(--bg) !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+        :fullscreen .panel { width: 100%; height: 100%; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        :fullscreen h2 { position: fixed; top: 20px; left: 20px; }
+        :fullscreen .zoom-btn { position: fixed; top: 20px; right: 20px; }
+        
+        /* Khi ma trận ở chế độ toàn màn hình, các ô sẽ to lên */
+        :fullscreen table td { width: 60px; height: 60px; font-size: 1.5rem; }
+        :fullscreen #mynetwork { width: 95vw; height: 85vh; border: none; }
 
         .theme-toggle { cursor: pointer; font-size: 20px; background: var(--card); padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; }
-
-        .slide-controls { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; }
         .slide-btn { padding: 8px 15px; border: 1px solid var(--primary); border-radius: 6px; background: transparent; color: var(--primary); cursor: pointer; font-weight: 500; transition: 0.2s; }
         .slide-btn:hover { background: var(--primary); color: white; }
-        
         iframe { width: 100%; height: 750px; border: 1px solid #ccc; border-radius: 8px; display: none; }
         .placeholder { height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #ccc; border-radius: 8px; color: #888; text-align: center; }
 
@@ -121,14 +124,12 @@
         </div>
     </div>
     <div class="right-col">
-        <!-- ĐỒ THỊ TRỰC QUAN -->
         <div class="panel" id="panel-graph">
             <h2 data-i18n="graph-header">🖼️ Đồ thị trực quan</h2>
             <button class="zoom-btn" onclick="toggleFullscreen('panel-graph')" title="Phóng to đồ thị">⛶</button>
             <div id="mynetwork"></div>
         </div>
         
-        <!-- MA TRẬN KỀ -->
         <div id="panel-matrix" class="panel matrix-container">
             <h2 data-i18n="matrix-header" style="position: absolute; top: 20px; left: 20px;">🔢 Ma trận kề</h2>
             <button class="zoom-btn" onclick="toggleFullscreen('panel-matrix')" title="Phóng to ma trận">⛶</button>
@@ -137,7 +138,7 @@
     </div>
 </div>
 
-<!-- CÁC TAB KHÁC GIỮ NGUYÊN -->
+<!-- CÁC TAB KHÁC GIỮ NGUYÊN NHƯ PHIÊN BẢN TRƯỚC -->
 <div id="theory-tab" class="content-section panel full-width">
     <h2 data-i18n="theory-title">Lý thuyết Tô màu đồ thị</h2>
     <p>Mục tiêu là gán màu cho các đỉnh sao cho không có hai đỉnh kề nhau nào có cùng màu.</p>
@@ -145,21 +146,17 @@
 
 <div id="slide-tab" class="content-section panel full-width">
     <h2 data-i18n="slide-header">📂 Slide giáo trình & Tài liệu</h2>
-    <input type="text" id="slide-search" placeholder="🔍 Tìm kiếm tài liệu..." onkeyup="filterSlides()" style="margin-bottom:15px; border:2px solid var(--primary);">
     <div class="slide-controls" id="slide-list">
         <button class="slide-btn" onclick="loadPdf('chuong2.pdf', 'slide-frame', 'slide-placeholder')">Chương 2</button>
         <button class="slide-btn" onclick="loadPdf('chuong3.pdf', 'slide-frame', 'slide-placeholder')">Chương 3</button>
         <button class="slide-btn" onclick="loadPdf('chuong4.pdf', 'slide-frame', 'slide-placeholder')">Chương 4</button>
-        <button class="slide-btn" onclick="loadPdf('chuong41.pdf', 'slide-frame', 'slide-placeholder')">Chương 4.1</button>
-        <button class="slide-btn" onclick="loadPdf('chuong43.pdf', 'slide-frame', 'slide-placeholder')">Chương 4.3</button>
     </div>
-    <div id="slide-placeholder" class="placeholder"><p style="font-size: 3rem;">📄</p>Chọn tài liệu để xem</div>
+    <div id="slide-placeholder" class="placeholder">📄 Chọn tài liệu để xem</div>
     <iframe id="slide-frame"></iframe>
 </div>
 
 <div id="exam-tab" class="content-section panel full-width">
     <h2 data-i18n="exam-header">📝 Đề thi mẫu</h2>
-    <button class="slide-btn" onclick="loadPdf('demau.pdf', 'exam-frame', 'exam-placeholder')">Xem Đề thi</button>
     <div id="exam-placeholder" class="placeholder">📝</div>
     <iframe id="exam-frame"></iframe>
 </div>
@@ -170,7 +167,6 @@
         <button class="slide-btn" id="stop-game-btn" onclick="stopGame()" style="border-color: var(--kma-red); color: var(--kma-red); display: none;">Dừng chơi</button>
     </div>
     <div id="game-placeholder" class="placeholder">
-        <p style="font-size: 3rem;">🕹️</p>
         <button class="main-btn" style="width:200px" onclick="loadGame()">Bắt đầu Game</button>
     </div>
     <iframe id="game-frame" style="height: 600px; border: none;"></iframe>
@@ -186,13 +182,10 @@
     function changeLanguage(l) { currentLang = l; document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = i18n[l][el.getAttribute('data-i18n')]; }); }
     function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
     
-    // HÀM PHÓNG TO TOÀN MÀN HÌNH
     function toggleFullscreen(id) {
         const element = document.getElementById(id);
         if (!document.fullscreenElement) {
-            element.requestFullscreen().catch(err => {
-                alert(`Không thể phóng to: ${err.message}`);
-            });
+            element.requestFullscreen().catch(err => { alert(`Lỗi: ${err.message}`); });
         } else {
             document.exitFullscreen();
         }
@@ -206,17 +199,6 @@
         b.classList.add('active'); 
     }
 
-    function loadPdf(path, frameId, placeholderId) { 
-        document.getElementById(placeholderId).style.display='none'; 
-        const f=document.getElementById(frameId); f.style.display='block'; f.src=path; 
-    }
-
-    function filterSlides() {
-        const input = document.getElementById('slide-search').value.toLowerCase();
-        const buttons = document.getElementById('slide-list').getElementsByClassName('slide-btn');
-        for (let btn of buttons) { btn.style.display = btn.innerText.toLowerCase().includes(input) ? "" : "none"; }
-    }
-
     function loadGame() {
         document.getElementById('game-placeholder').style.display = 'none';
         document.getElementById('stop-game-btn').style.display = 'block';
@@ -227,7 +209,7 @@
 
     function stopGame() {
         const frame = document.getElementById('game-frame');
-        if (frame.src !== "" && !frame.src.includes('about:blank')) {
+        if (frame.src && !frame.src.includes('about:blank')) {
             frame.src = "about:blank";
             frame.style.display = 'none';
             document.getElementById('game-placeholder').style.display = 'flex';
@@ -236,10 +218,8 @@
     }
 
     function main() {
-        const vInput = document.getElementById('vertices').value;
-        const v = parseInt(vInput);
+        const v = parseInt(document.getElementById('vertices').value);
         if (isNaN(v) || v <= 0) return;
-
         const eT = document.getElementById('edges').value.trim();
         let adj = Array.from({length:v}, () => Array(v).fill(0));
         eT.split('\n').forEach(l => {
