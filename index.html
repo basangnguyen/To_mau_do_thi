@@ -63,11 +63,18 @@
         
         .theme-toggle { cursor: pointer; font-size: 20px; background: var(--card); padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; }
 
+        /* Style cho tab Slide & Tìm kiếm */
+        .search-box { margin-bottom: 20px; width: 100%; }
         .slide-controls { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; }
         .slide-btn { padding: 8px 15px; border: 1px solid var(--primary); border-radius: 6px; background: transparent; color: var(--primary); cursor: pointer; font-weight: 500; transition: 0.2s; }
         .slide-btn:hover { background: var(--primary); color: white; }
+        
         iframe { width: 100%; height: 750px; border: 1px solid #ccc; border-radius: 8px; display: none; }
         .placeholder { height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #ccc; border-radius: 8px; color: #888; text-align: center; }
+
+        @media (max-width: 768px) {
+            .content-section.active { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -97,6 +104,7 @@
     <button class="tab-btn" onclick="showTab('exam-tab', this)" data-i18n="tab-exam">📝 Đề thi mẫu</button>
 </div>
 
+<!-- TAB TÍNH TOÁN -->
 <div id="calc-tab" class="content-section active">
     <div class="left-col">
         <div class="panel">
@@ -126,21 +134,28 @@
     </div>
 </div>
 
+<!-- TAB LÝ THUYẾT -->
 <div id="theory-tab" class="content-section panel full-width">
     <h2 data-i18n="theory-title">Lý thuyết Tô màu đồ thị</h2>
     <p data-i18n="theory-text">Mục tiêu là gán màu cho các đỉnh sao cho không có hai đỉnh kề nhau nào có cùng màu.</p>
 </div>
 
-<!-- TAB SLIDE GIÁO TRÌNH -->
+<!-- TAB SLIDE GIÁO TRÌNH (CÓ TÌM KIẾM) -->
 <div id="slide-tab" class="content-section panel full-width">
     <h2 data-i18n="slide-header">📂 Slide giáo trình & Tài liệu</h2>
-    <div class="slide-controls">
-        <button class="slide-btn" onclick="loadPdf('chuong2.pdf', 'slide-frame', 'slide-placeholder')">Chương 2</button>
-        <button class="slide-btn" onclick="loadPdf('chuong3.pdf', 'slide-frame', 'slide-placeholder')">Chương 3</button>
-        <button class="slide-btn" onclick="loadPdf('chuong4.pdf', 'slide-frame', 'slide-placeholder')">Chương 4</button>
-        <button class="slide-btn" onclick="loadPdf('chuong41.pdf', 'slide-frame', 'slide-placeholder')">Chương 4.1</button>
-        <button class="slide-btn" onclick="loadPdf('chuong43.pdf', 'slide-frame', 'slide-placeholder')">Chương 4.3</button>
+    
+    <div class="search-box">
+        <input type="text" id="slide-search" placeholder="🔍 Nhập tên chương hoặc từ khóa để tìm nhanh..." onkeyup="filterSlides()">
     </div>
+
+    <div class="slide-controls" id="slide-list">
+        <button class="slide-btn" onclick="loadPdf('chuong2.pdf', 'slide-frame', 'slide-placeholder')">Chương 2: Đồ thị cơ bản</button>
+        <button class="slide-btn" onclick="loadPdf('chuong3.pdf', 'slide-frame', 'slide-placeholder')">Chương 3: Cấu trúc dữ liệu đồ thị</button>
+        <button class="slide-btn" onclick="loadPdf('chuong4.pdf', 'slide-frame', 'slide-placeholder')">Chương 4: Các thuật toán tìm kiếm</button>
+        <button class="slide-btn" onclick="loadPdf('chuong41.pdf', 'slide-frame', 'slide-placeholder')">Chương 4.1: Luồng & Mạng</button>
+        <button class="slide-btn" onclick="loadPdf('chuong43.pdf', 'slide-frame', 'slide-placeholder')">Chương 4.3: Tô màu & Sắc số</button>
+    </div>
+
     <div id="slide-placeholder" class="placeholder">
         <p style="font-size: 3rem;">📄</p>
         <p data-i18n="slide-placeholder-text">Chọn một chương ở trên để xem tài liệu</p>
@@ -186,8 +201,29 @@
     let currentLang = 'vi';
     function changeLanguage(l) { currentLang = l; document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = i18n[l][el.getAttribute('data-i18n')]; }); }
     function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
-    function showTab(t, b) { document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none'); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(t).style.display = (t==='calc-tab'?'grid':'block'); b.classList.add('active'); }
-    function loadPdf(path, frameId, placeholderId) { document.getElementById(placeholderId).style.display='none'; const f=document.getElementById(frameId); f.style.display='block'; f.src=path; }
+    
+    function showTab(t, b) { 
+        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none'); 
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
+        document.getElementById(t).style.display = (t==='calc-tab'?'grid':'block'); 
+        b.classList.add('active'); 
+    }
+
+    function loadPdf(path, frameId, placeholderId) { 
+        document.getElementById(placeholderId).style.display='none'; 
+        const f=document.getElementById(frameId); 
+        f.style.display='block'; 
+        f.src=path; 
+    }
+
+    function filterSlides() {
+        const input = document.getElementById('slide-search').value.toLowerCase();
+        const buttons = document.getElementById('slide-list').getElementsByClassName('slide-btn');
+        for (let btn of buttons) {
+            btn.style.display = btn.innerText.toLowerCase().includes(input) ? "" : "none";
+        }
+    }
+
     function openFullscreen(id) { const e=document.getElementById(id); if(e.requestFullscreen) e.requestFullscreen(); }
 
     function main() {
