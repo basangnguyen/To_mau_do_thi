@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KMA - Graph Color Pro</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        :root { --bg: #eceff1; --card: #ffffff; --text: #2c3e50; --primary: #0054a5; --accent: #e74c3c; --kma-red: #cc0000; }
+        [data-theme="dark"] { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --primary: #3498db; --kma-red: #ff4d4d; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; transition: 0.3s; }
+
+        header {
+            background: #ffffff;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            border-bottom: 4px solid var(--kma-red);
+        }
+        [data-theme="dark"] header { background: #1e1e1e; }
+        
+        .logo-container {
+            width: 80px; height: 80px; margin-right: 20px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; background: #f0f0f0; border-radius: 8px;
+        }
+        .logo-kma { max-height: 100%; max-width: 100%; object-fit: contain; }
+        .header-title h1 { margin: 0; font-size: 1.5em; color: var(--kma-red); text-transform: uppercase; font-weight: bold; }
+        .header-title p { margin: 2px 0 0 0; font-size: 0.95em; font-weight: 500; }
+
+        .controls-top { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 1000; }
+        .lang-select { padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; background: var(--card); color: var(--text); font-weight: bold; }
+
+        .tab-container { max-width: 1200px; margin: 0 auto 20px auto; display: flex; gap: 10px; padding: 0 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 25px; border: none; border-radius: 8px; cursor: pointer; background: #cfd8dc; font-weight: bold; color: #455a64; transition: 0.2s; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        .content-section { display: none; max-width: 1200px; margin: auto; padding: 0 20px 30px 20px; box-sizing: border-box; }
+        .content-section.active { display: grid; grid-template-columns: 340px 1fr; gap: 25px; }
+        .content-section.full-width.active { display: block; }
+
+        .panel { position: relative; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { font-size: 1.1em; border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 15px; color: var(--primary); }
+        
+        input, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; background: var(--card); color: var(--text); box-sizing: border-box; }
+        button.main-btn { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        .fullscreen-btn {
+            position: absolute; top: 15px; right: 15px; width: 32px; height: 32px;
+            background: rgba(0, 0, 0, 0.1); color: var(--text); border: 1px solid #ccc;
+            border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+
+        #mynetwork { height: 450px; background: var(--card); border-radius: 8px; border: 1px dashed #ccc; }
+        
+        .matrix-container { overflow: auto; margin-top: 10px; display: flex; justify-content: center; align-items: flex-start; background: var(--card); padding: 20px; min-height: 200px; }
+        table { border-collapse: collapse; margin: auto; }
+        td { border: 1px solid #ccc; width: 38px; height: 38px; text-align: center; font-weight: bold; transition: 0.2s; }
+        #matrix-display:fullscreen { background: var(--bg); display: flex; align-items: center; }
+        #matrix-display:fullscreen td { width: 60px; height: 60px; font-size: 1.8em; background: var(--card); }
+        
+        .theme-toggle { cursor: pointer; font-size: 20px; background: var(--card); padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; }
+
+        .slide-controls { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .slide-btn { padding: 8px 15px; border: 1px solid var(--primary); border-radius: 6px; background: transparent; color: var(--primary); cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .slide-btn:hover { background: var(--primary); color: white; }
+        iframe { width: 100%; height: 750px; border: 1px solid #ccc; border-radius: 8px; display: none; }
+        .placeholder { height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #ccc; border-radius: 8px; color: #888; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="controls-top">
+    <select class="lang-select" onchange="changeLanguage(this.value)">
+        <option value="vi">🇻🇳 VI</option>
+        <option value="en">🇺🇸 EN</option>
+    </select>
+    <div class="theme-toggle" onclick="toggleTheme()">🌓</div>
+</div>
+
+<header>
+    <div class="logo-container">
+        <img src="https://gist.githubusercontent.com/vinhjaxt/fa4208fd6902dd8b2f4d944fa6e7f2af/raw/logo-hvktmm.png" alt="Logo KMA" class="logo-kma">
+    </div>
+    <div class="header-title">
+        <h1 data-i18n="app-title">Học viện Kỹ thuật Mật mã</h1>
+        <p data-i18n="app-subtitle">Ứng dụng giải toán Tìm sắc số của đồ thị</p>
+    </div>
+</header>
+
+<div class="tab-container">
+    <button class="tab-btn active" onclick="showTab('calc-tab', this)" data-i18n="tab-calc">🚀 Tính toán</button>
+    <button class="tab-btn" onclick="showTab('theory-tab', this)" data-i18n="tab-theory">📖 Lý thuyết</button>
+    <button class="tab-btn" onclick="showTab('slide-tab', this)" data-i18n="tab-slide">📂 Slide giáo trình</button>
+    <button class="tab-btn" onclick="showTab('exam-tab', this)" data-i18n="tab-exam">📝 Đề thi mẫu</button>
+</div>
+
+<div id="calc-tab" class="content-section active">
+    <div class="left-col">
+        <div class="panel">
+            <h2 data-i18n="input-header">⚙️ Nhập liệu</h2>
+            <label data-i18n="label-vertices">Số đỉnh:</label>
+            <input type="number" id="vertices" value="5">
+            <label data-i18n="label-edges">Cạnh (u-v):</label>
+            <textarea id="edges" rows="5">0-1&#10;1-2&#10;2-3&#10;3-0&#10;0-2</textarea>
+            <button class="main-btn" onclick="main()" data-i18n="btn-run">Chạy thuật toán</button>
+        </div>
+        <div class="panel">
+            <h2 data-i18n="result-header">📊 Kết quả</h2>
+            <div id="stats" data-i18n="no-data">Chưa có dữ liệu</div>
+        </div>
+    </div>
+    <div class="right-col">
+        <div class="panel">
+            <h2 data-i18n="graph-header">🖼️ Đồ thị trực quan</h2>
+            <button class="fullscreen-btn" onclick="openFullscreen('mynetwork')">⛶</button>
+            <div id="mynetwork"></div>
+        </div>
+        <div id="matrix-display" class="panel matrix-container">
+            <h2 data-i18n="matrix-header" style="position: absolute; top: 20px; left: 20px;">🔢 Ma trận kề</h2>
+            <button class="fullscreen-btn" onclick="openFullscreen('matrix-display')">⛶</button>
+            <div id="matrix-table-wrapper" style="margin-top: 40px;"></div>
+        </div>
+    </div>
+</div>
+
+<div id="theory-tab" class="content-section panel full-width">
+    <h2 data-i18n="theory-title">Lý thuyết Tô màu đồ thị</h2>
+    <p data-i18n="theory-text">Mục tiêu là gán màu cho các đỉnh sao cho không có hai đỉnh kề nhau nào có cùng màu.</p>
+</div>
+
+<!-- TAB SLIDE GIÁO TRÌNH -->
+<div id="slide-tab" class="content-section panel full-width">
+    <h2 data-i18n="slide-header">📂 Slide giáo trình & Tài liệu</h2>
+    <div class="slide-controls">
+        <button class="slide-btn" onclick="loadPdf('docs/chuong2.pdf', 'slide-frame', 'slide-placeholder')">Chương 2</button>
+        <button class="slide-btn" onclick="loadPdf('docs/chuong3.pdf', 'slide-frame', 'slide-placeholder')">Chương 3</button>
+        <button class="slide-btn" onclick="loadPdf('docs/chuong4.pdf', 'slide-frame', 'slide-placeholder')">Chương 4</button>
+        <button class="slide-btn" onclick="loadPdf('docs/chuong41.pdf', 'slide-frame', 'slide-placeholder')">Chương 4.1</button>
+        <button class="slide-btn" onclick="loadPdf('docs/chuong43.pdf', 'slide-frame', 'slide-placeholder')">Chương 4.3</button>
+    </div>
+    <div id="slide-placeholder" class="placeholder">
+        <p style="font-size: 3rem;">📄</p>
+        <p data-i18n="slide-placeholder-text">Chọn một chương ở trên để xem tài liệu</p>
+    </div>
+    <iframe id="slide-frame"></iframe>
+</div>
+
+<!-- TAB ĐỀ THI MẪU -->
+<div id="exam-tab" class="content-section panel full-width">
+    <h2 data-i18n="exam-header">📝 Đề thi mẫu</h2>
+    <div class="slide-controls">
+        <button class="slide-btn" onclick="loadPdf('docs/demau.pdf', 'exam-frame', 'exam-placeholder')">Xem Đề thi mẫu</button>
+    </div>
+    <div id="exam-placeholder" class="placeholder">
+        <p style="font-size: 3rem;">📝</p>
+        <p data-i18n="exam-placeholder-text">Nhấn nút bên trên để xem đề thi</p>
+    </div>
+    <iframe id="exam-frame"></iframe>
+</div>
+
+<script>
+    const i18n = {
+        vi: { 
+            "app-title": "Học viện Kỹ thuật Mật mã", "app-subtitle": "Ứng dụng giải toán Tìm sắc số của đồ thị", 
+            "tab-calc": "🚀 Tính toán", "tab-theory": "📖 Lý thuyết", "tab-slide": "📂 Slide giáo trình", "tab-exam": "📝 Đề thi mẫu",
+            "input-header": "⚙️ Nhập liệu", "label-vertices": "Số đỉnh:", "label-edges": "Cạnh (u-v):", "btn-run": "Chạy thuật toán", 
+            "result-header": "📊 Kết quả", "no-data": "Chưa có dữ liệu", "graph-header": "🖼️ Đồ thị trực quan", "matrix-header": "🔢 Ma trận kề", 
+            "theory-title": "Lý thuyết Tô màu đồ thị", "res-chromatic": "Sắc số (Chromatic Number): ",
+            "slide-header": "📂 Slide giáo trình & Tài liệu", "slide-placeholder-text": "Chọn một chương ở trên để xem tài liệu",
+            "exam-header": "📝 Đề thi mẫu", "exam-placeholder-text": "Nhấn nút bên trên để xem đề thi"
+        },
+        en: { 
+            "app-title": "ACT", "app-subtitle": "Graph Coloring Solver", 
+            "tab-calc": "🚀 Calculation", "tab-theory": "📖 Theory", "tab-slide": "📂 Slides", "tab-exam": "📝 Exam Samples",
+            "input-header": "⚙️ Input", "label-vertices": "Vertices:", "label-edges": "Edges:", "btn-run": "Run", 
+            "result-header": "📊 Results", "no-data": "No data", "graph-header": "🖼️ Graph", "matrix-header": "🔢 Matrix", 
+            "theory-title": "Theory", "res-chromatic": "Chromatic Number: ",
+            "slide-header": "📂 Course Slides", "slide-placeholder-text": "Select a chapter to view",
+            "exam-header": "📝 Exam Samples", "exam-placeholder-text": "Click the button above to view"
+        }
+    };
+
+    let currentLang = 'vi';
+    function changeLanguage(l) { currentLang = l; document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = i18n[l][el.getAttribute('data-i18n')]; }); }
+    function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
+    function showTab(t, b) { document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none'); document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(t).style.display = (t==='calc-tab'?'grid':'block'); b.classList.add('active'); }
+    function loadPdf(path, frameId, placeholderId) { document.getElementById(placeholderId).style.display='none'; const f=document.getElementById(frameId); f.style.display='block'; f.src=path; }
+    function openFullscreen(id) { const e=document.getElementById(id); if(e.requestFullscreen) e.requestFullscreen(); }
+
+    function main() {
+        const v = parseInt(document.getElementById('vertices').value);
+        const eT = document.getElementById('edges').value.trim();
+        let adj = Array.from({length:v}, () => Array(v).fill(0));
+        eT.split('\n').forEach(l => {
+            let p = l.split('-');
+            if(p.length===2) {
+                let u=parseInt(p[0]), v2=parseInt(p[1]);
+                if(u<v && v2<v) { adj[u][v2]=1; adj[v2][u]=1; }
+            }
+        });
+        renderMatrix(v, adj);
+        const res = getExactColoring(v, adj);
+        renderGraph(v, eT, res.colors);
+        document.getElementById('stats').innerHTML = `${i18n[currentLang]["res-chromatic"]} <b>${res.count}</b>`;
+    }
+
+    function renderMatrix(v, adj) {
+        let h = '<table>';
+        for(let i=0; i<v; i++) {
+            h += '<tr>';
+            for(let j=0; j<v; j++) h += `<td>${adj[i][j]}</td>`;
+            h += '</tr>';
+        }
+        h += '</table>';
+        document.getElementById('matrix-table-wrapper').innerHTML = h;
+    }
+
+    function getExactColoring(n, adj) {
+        function isSafe(v, c, colors) { for(let i=0; i<n; i++) if(adj[v][i] && c===colors[i]) return false; return true; }
+        function solve(m, colors, v) {
+            if(v===n) return true;
+            for(let c=1; c<=m; c++) {
+                if(isSafe(v, c, colors)) { colors[v]=c; if(solve(m, colors, v+1)) return true; colors[v]=0; }
+            }
+            return false;
+        }
+        for(let m=1; m<=n; m++) {
+            let colors = Array(n).fill(0);
+            if(solve(m, colors, 0)) return {count:m, colors: colors.map(c=>c-1)};
+        }
+    }
+
+    function renderGraph(v, eT, col) {
+        const palette = ["#FF5252", "#4CAF50", "#2196F3", "#FFEB3B", "#9C27B0", "#FF9800", "#00BCD4", "#795548", "#607D8B", "#E91E63"];
+        let ns = [], es = [];
+        for(let i=0; i<v; i++) ns.push({id:i, label:`${i}`, color: palette[col[i]%10]});
+        eT.split('\n').forEach(l => { 
+            let p=l.split('-'); 
+            if(p.length===2) es.push({from:parseInt(p[0]), to:parseInt(p[1])}); 
+        });
+        new vis.Network(document.getElementById('mynetwork'), {nodes:new vis.DataSet(ns), edges:new vis.DataSet(es)}, {nodes:{shape:'circle'}});
+    }
+</script>
+</body>
+</html>
