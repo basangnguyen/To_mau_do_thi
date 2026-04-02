@@ -89,7 +89,6 @@
     <button class="tab-btn" onclick="showTab('game-tab', this)" style="background: #ffcc00; color: #333;">🎮 Game giải trí</button>
 </div>
 
-<!-- TAB TÍNH TOÁN -->
 <div id="calc-tab" class="content-section active">
     <div class="left-col">
         <div class="panel">
@@ -117,13 +116,11 @@
     </div>
 </div>
 
-<!-- TAB LÝ THUYẾT -->
 <div id="theory-tab" class="content-section panel full-width">
     <h2 data-i18n="theory-title">Lý thuyết Tô màu đồ thị</h2>
     <p>Mục tiêu là gán màu cho các đỉnh sao cho không có hai đỉnh kề nhau nào có cùng màu.</p>
 </div>
 
-<!-- TAB SLIDE GIÁO TRÌNH -->
 <div id="slide-tab" class="content-section panel full-width">
     <h2 data-i18n="slide-header">📂 Slide giáo trình & Tài liệu</h2>
     <input type="text" id="slide-search" placeholder="🔍 Tìm kiếm tài liệu..." onkeyup="filterSlides()" style="margin-bottom:15px; border:2px solid var(--primary);">
@@ -138,7 +135,6 @@
     <iframe id="slide-frame"></iframe>
 </div>
 
-<!-- TAB ĐỀ THI MẪU -->
 <div id="exam-tab" class="content-section panel full-width">
     <h2 data-i18n="exam-header">📝 Đề thi mẫu</h2>
     <button class="slide-btn" onclick="loadPdf('demau.pdf', 'exam-frame', 'exam-placeholder')">Xem Đề thi</button>
@@ -146,9 +142,11 @@
     <iframe id="exam-frame"></iframe>
 </div>
 
-<!-- TAB GAME GIẢI TRÍ -->
 <div id="game-tab" class="content-section panel full-width">
-    <h2>🎮 Giải trí</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>🎮 Giải trí</h2>
+        <button class="slide-btn" id="stop-game-btn" onclick="stopGame()" style="border-color: var(--kma-red); color: var(--kma-red); display: none;">Dừng chơi</button>
+    </div>
     <div id="game-placeholder" class="placeholder">
         <p style="font-size: 3rem;">🕹️</p>
         <button class="main-btn" style="width:200px" onclick="loadGame()">Bắt đầu Game</button>
@@ -166,7 +164,13 @@
     function changeLanguage(l) { currentLang = l; document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = i18n[l][el.getAttribute('data-i18n')]; }); }
     function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
     
+    // Hàm showTab được nâng cấp để kiểm tra và dừng game
     function showTab(t, b) { 
+        // Nếu chuyển từ tab Game sang tab khác, tự động dừng game
+        if (t !== 'game-tab') {
+            stopGame();
+        }
+
         document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none'); 
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
         document.getElementById(t).style.display = (t==='calc-tab'?'grid':'block'); 
@@ -184,11 +188,23 @@
         for (let btn of buttons) { btn.style.display = btn.innerText.toLowerCase().includes(input) ? "" : "none"; }
     }
 
+    // Các hàm xử lý Game
     function loadGame() {
         document.getElementById('game-placeholder').style.display = 'none';
+        document.getElementById('stop-game-btn').style.display = 'block';
         const frame = document.getElementById('game-frame');
         frame.style.display = 'block';
-        frame.src = 'game.html'; // Tên file game của bạn
+        frame.src = 'game.html'; 
+    }
+
+    function stopGame() {
+        const frame = document.getElementById('game-frame');
+        if (frame.src !== "" && !frame.src.includes('about:blank')) {
+            frame.src = "about:blank"; // Xóa nội dung iframe để dừng mọi hoạt động
+            frame.style.display = 'none';
+            document.getElementById('game-placeholder').style.display = 'flex';
+            document.getElementById('stop-game-btn').style.display = 'none';
+        }
     }
 
     function main() {
