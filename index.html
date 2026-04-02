@@ -9,7 +9,7 @@
         :root { --bg: #eceff1; --card: #ffffff; --text: #2c3e50; --primary: #0054a5; --accent: #e74c3c; --kma-red: #cc0000; }
         [data-theme="dark"] { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --primary: #3498db; --kma-red: #ff4d4d; }
         
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; transition: 0.3s; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; transition: 0.3s; padding-bottom: 80px; }
 
         header {
             background: #ffffff; padding: 15px 25px; display: flex; align-items: center;
@@ -60,6 +60,19 @@
         
         .theme-toggle { cursor: pointer; font-size: 20px; background: var(--card); padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; }
 
+        /* MUSIC PLAYER STYLES */
+        #music-player {
+            position: fixed; bottom: 20px; left: 20px; z-index: 9999;
+            background: var(--card); padding: 8px 15px; border-radius: 50px;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 2px solid var(--primary);
+        }
+        .music-btn {
+            background: var(--primary); border: none; color: white;
+            width: 35px; height: 35px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+        }
+
         /* YOUTUBE STYLES */
         .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); }
         .video-item { background: var(--card); border-radius: 10px; overflow: hidden; cursor: pointer; transition: 0.3s; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
@@ -85,6 +98,15 @@
     </style>
 </head>
 <body>
+
+<!-- Music Player -->
+<div id="music-player">
+    <button class="music-btn" onclick="toggleMusic()" id="btn-music-toggle">▶</button>
+    <span id="music-text" style="font-size: 13px; font-weight: bold;">Nhạc nền</span>
+    <audio id="bg-audio" loop>
+        <source src="https://www.bensound.com/bensound-music/bensound-creativeminds.mp3" type="audio/mpeg">
+    </audio>
+</div>
 
 <div class="controls-top">
     <select class="lang-select" onchange="changeLanguage(this.value)">
@@ -230,10 +252,32 @@
     }
     function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
 
+    // Music Player Logic
+    const audio = document.getElementById('bg-audio');
+    const musicBtn = document.getElementById('btn-music-toggle');
+    const musicText = document.getElementById('music-text');
+
+    function toggleMusic() {
+        if (audio.paused) {
+            audio.play();
+            musicBtn.innerText = "⏸";
+            musicText.innerText = "Đang phát...";
+        } else {
+            audio.pause();
+            musicBtn.innerText = "▶";
+            musicText.innerText = "Đã dừng";
+        }
+    }
+
     // Tabs
     function showTab(t, b) { 
         stopGame();
         stopYoutube(); 
+        
+        // Giảm âm lượng nhạc nền khi xem Youtube
+        if (t === 'youtube-tab') audio.volume = 0.2;
+        else audio.volume = 1.0;
+
         document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none'); 
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
         const target = document.getElementById(t);
